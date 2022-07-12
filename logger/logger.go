@@ -18,7 +18,7 @@ type logger struct {
 	*logrus.Logger
 	activeDate time.Time
 	logfile    *os.File
-	logPath    string
+	logPath    LogPath
 	config     LoggerConfig
 }
 
@@ -26,8 +26,10 @@ type LoggerConfig struct {
 	BasicFields logrus.Fields
 }
 
+type LogPath string
+
 // NewLogger initializes the logger wrapper
-func NewLogger(logPath string, config LoggerConfig) *logger {
+func NewLogger(logPath LogPath, config LoggerConfig) *logger {
 	var baseLogger = logrus.New()
 
 	var logger = &logger{
@@ -49,10 +51,10 @@ func (l *logger) rotateIfNeeded() {
 	if l.activeDate.IsZero() || currentTime.Format("2006-01-02") != l.activeDate.Format("2006-01-02") {
 		if l.logfile != nil {
 			l.logfile.Close()
-			os.Remove(fmt.Sprintf("%slog-%s.log", l.logPath, l.activeDate.Format("2006-01-02")))
+			os.Remove(fmt.Sprintf("%slog-%s.log", string(l.logPath), l.activeDate.Format("2006-01-02")))
 		}
 		l.activeDate = currentTime
-		l.logfile, _ = os.OpenFile(fmt.Sprintf("%s/log-%s.log", l.logPath, l.activeDate.Format("2006-01-02")), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
+		l.logfile, _ = os.OpenFile(fmt.Sprintf("%s/log-%s.log", string(l.logPath), l.activeDate.Format("2006-01-02")), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
 		l.SetOutput(l.logfile)
 	}
 }
